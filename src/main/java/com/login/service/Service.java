@@ -4,7 +4,9 @@ import com.login.model.input.Filtros;
 import com.login.model.output.Usuarios;
 import com.login.model.input.Credenciales;
 import com.login.model.input.Usuario;
+import com.login.utils.JWTUtil;
 import com.login.utils.Utils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Repository;
@@ -22,6 +24,9 @@ public class Service extends Utils implements Iservice {
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    @Autowired
+    JWTUtil jwtUtil;
     @Override
     public ResponseEntity<?> listaUsuarios(String opcion) {
         TypedQuery<Usuarios> query= entityManager.createQuery("from com.login.model.output.Usuarios u where u.status=:status",
@@ -67,30 +72,31 @@ public class Service extends Utils implements Iservice {
                     "and u.password=:password and no_acceso=0", Usuario.class)
                 .setParameter("login",credenciales.getLogin())
                 .setParameter("password",desencripta);
-            List<Usuario> usu=qr.getResultList();
+            List<Usuario> usu= qr.getResultList();
             if(!usu.isEmpty()){
-                return new ResponseEntity<>(usu,HttpStatus.OK);
+                String token = jwtUtil.create(usu.get(0).getLogin(),usu.get(0).getEmail());
+                return new ResponseEntity<>(token,HttpStatus.OK);
             }
-            Usuarios usua =entityManager.find(Usuarios.class,credenciales.getLogin());
-            if(usua!=null && usua.getLogin()!=null && usua.getStatus().equals("A")){
-                float intentos =usua.getIntentos()+1;
-                if(intentos>3){
-                    String quer ="UPDATE USUARIO SET FECHAREVOCADO=sysdate, NO_ACCESO=:acceso, STATUS=:status, INTENTOS=:intentos where LOGIN =:id ";
-                    Query query=entityManager.createNativeQuery(quer).setParameter("acceso",1)
-                        .setParameter("status","R").setParameter("intentos",intentos)
-                        .setParameter("id",credenciales.getLogin());
-                    query.executeUpdate();
-                }else {
-                    String quer ="UPDATE USUARIO SET intentos=:intentos where LOGIN =:id ";
-                    Query query=entityManager.createNativeQuery(quer).setParameter("intentos",intentos)
-                            .setParameter("id",credenciales.getLogin());
-                    query.executeUpdate();
-                }
-            }
-            return new ResponseEntity<>(usu,HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.FAILED_DEPENDENCY);
         }
+        Usuarios usua =entityManager.find(Usuarios.class,credenciales.getLogin());
+        if(usua!=null && usua.getLogin()!=null && usua.getStatus().equals("A")){
+            float intentos =usua.getIntentos()+1;
+            if(intentos>3){
+                String quer ="UPDATE USUARIO SET FECHAREVOCADO=sysdate, NO_ACCESO=:acceso, STATUS=:status, INTENTOS=:intentos where LOGIN =:id ";
+                Query query=entityManager.createNativeQuery(quer).setParameter("acceso",1)
+                        .setParameter("status","R").setParameter("intentos",intentos)
+                        .setParameter("id",credenciales.getLogin());
+                query.executeUpdate();
+            }else {
+                String quer ="UPDATE USUARIO SET intentos=:intentos where LOGIN =:id ";
+                Query query=entityManager.createNativeQuery(quer).setParameter("intentos",intentos)
+                        .setParameter("id",credenciales.getLogin());
+                query.executeUpdate();
+            }
+        }
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
 
     @Override

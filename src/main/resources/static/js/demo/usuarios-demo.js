@@ -8,10 +8,7 @@ async function cargarUsuarios(opcion) {
 
   const request = await fetch('/lista/'+opcion, {
     method: 'GET',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    }
+    headers: getHeards()
   });
   const usuarios = await request.json();
   console.log(usuarios);
@@ -35,10 +32,7 @@ async function eliminarUsuario (login){
   }
   const request = await fetch('/baja/'+login, {
     method: 'PATCH',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    }
+    headers: getHeards()
   });
   cargarUsuarios("T");
 }
@@ -53,10 +47,7 @@ async function agregaUsuarios(){
   datos.apellidop=document.getElementById('apellidop').value;
   const request = await fetch('/alta', {
     method: 'POST',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
+    headers: getHeards(),
     body: JSON.stringify(datos)
   });
   $('#myModal').modal('hide');
@@ -66,10 +57,7 @@ async function agregaUsuarios(){
 async function buscarUsuario (login){
   const request = await fetch('/busca/'+login, {
     method: 'GET',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    }
+    headers: getHeards()
   });
     const usuario = await request.json();
     document.getElementById('nombre1').value=usuario.nombre;
@@ -93,10 +81,7 @@ async function editarUsuario (){
         datos.email=document.getElementById('correo').value;
         const request = await fetch('/actualiza', {
             method: 'POST',
-            headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-            },
+            headers: getHeards(),
             body: JSON.stringify(datos)
         });
         $('#myModal1').modal('hide');
@@ -113,10 +98,7 @@ async function buscarnombre(){
     datos.faltaFin=null;
     const request = await fetch('/filtros', {
         method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
+        headers: getHeards(),
         body: JSON.stringify(datos)
     });
     const usuarios = await request.json();
@@ -144,10 +126,7 @@ async function buscarfecha(){
     console.log(datos.faltaFin);
     const request = await fetch('/filtros', {
         method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
+        headers: getHeards(),
         body: JSON.stringify(datos)
     });
     const usuarios = await request.json();
@@ -165,4 +144,11 @@ async function buscarfecha(){
           }
       }
       document.querySelector("#usuarios tbody").outerHTML=listadoHtml;
+}
+function getHeards(){
+    return{
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': localStorage.token
+    };
 }

@@ -4,7 +4,9 @@ import com.login.model.input.Credenciales;
 import com.login.model.input.Filtros;
 import com.login.model.input.Usuario;
 import com.login.service.Iservice;
+import com.login.utils.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,9 +14,15 @@ import org.springframework.web.bind.annotation.*;
 public class UsuarioController {
     @Autowired
     private Iservice service;
+    @Autowired
+    JWTUtil jwtUtil;
 
     @GetMapping("/lista/{opcion}")
-    public ResponseEntity<?> listaUsuarios(@PathVariable String opcion){
+    public ResponseEntity<?> listaUsuarios(@RequestHeader(value = "Authorization") String token, @PathVariable String opcion){
+        String tokenUser =jwtUtil.getKey(token);
+        if(tokenUser == null){
+            return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
+        }
         return service.listaUsuarios(opcion);
     }
 
@@ -26,11 +34,6 @@ public class UsuarioController {
     @PatchMapping("/baja/{id}")
     public ResponseEntity<?> bajaUsuarios(@PathVariable String id){
         return service.bajaUsuarios(id);
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Credenciales cre){
-        return service.login(cre);
     }
 
     @PostMapping("/actualiza")

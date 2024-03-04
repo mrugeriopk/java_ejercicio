@@ -2,6 +2,7 @@ async function iniciarSesion (){
   let datos ={};
   datos.login=document.getElementById('login').value;
   datos.pass=document.getElementById('pass').value;
+  console.log(datos);
   const request = await fetch('/login',{
     method: 'POST',
     headers: {
@@ -11,9 +12,13 @@ async function iniciarSesion (){
     body : JSON.stringify(datos)
 
   });
-  const response = await request.json();
-  console.log(response);
-  if(response && response.length > 0){
+
+  console.log(request);
+  const respuesta = await request.text();
+  if(respuesta!=null && respuesta.length > 0){
+    localStorage.token = respuesta;
+    localStorage.user = datos.login;
+    alert("Inicio exitoso");
     window.location.href = "tables.html";
   }else{
     alert('contraseña o usuario incorrecto');
